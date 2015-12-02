@@ -24,6 +24,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('is_eliminated', models.BooleanField(default=False)),
+                ('added_by', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
                 ('movie', models.ForeignKey(to='movieselector.Movie')),
             ],
         ),
@@ -32,18 +33,22 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('number', models.IntegerField()),
-                ('is_closed', models.BooleanField(default=False)),
+                ('state', models.CharField(default=b'open', max_length=10)),
             ],
         ),
         migrations.CreateModel(
             name='Selection',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('created', models.DateTimeField(auto_now_add=True)),
                 ('max_movies_per_user', models.IntegerField(default=3)),
                 ('has_winner', models.BooleanField(default=False)),
                 ('owner', models.ForeignKey(related_name='selections_owned', to=settings.AUTH_USER_MODEL)),
                 ('users', models.ManyToManyField(related_name='selections', to=settings.AUTH_USER_MODEL)),
             ],
+            options={
+                'ordering': ('created',),
+            },
         ),
         migrations.CreateModel(
             name='Vote',
