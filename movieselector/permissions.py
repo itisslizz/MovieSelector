@@ -14,3 +14,17 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
         # Write permissions are only allowed to the owner of the snippet.
         return obj.owner == request.user
+
+class IsParticipantOrReadOnly(permissions.BasePermission):
+    """
+    Custom permission to only allow Participants of a Selection to add movies.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        #
+        #
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # Write permissions are only allowed to participants of a Selection
+        return request.user in obj.selection(users)
