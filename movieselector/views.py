@@ -1,6 +1,6 @@
 from movieselector.models import Movie, Round, Selection
 from movieselector.permissions import IsOwnerOrReadOnly
-from movieselector.serializers import MovieSerializer, RoundSerializer, UserSerializer, SelectionSerializer, VoteSerializer
+from movieselector.serializers import MovieSerializer, UserSerializer, SelectionSerializer, VoteSerializer, MovieInSelectionSerializer
 from rest_framework import generics, permissions
 from django.contrib.auth.models import User
 
@@ -13,13 +13,15 @@ class MovieDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
 
-class RoundList(generics.ListCreateAPIView):
-    queryset = Round.objects.all()
-    serializer_class = RoundSerializer
 
-class RoundDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Round.objects.all()
-    serializer_class = RoundSerializer
+class MovieInSelectionList(generics.ListCreateAPIView):
+    queryset = MovieInSelection.objects.all()
+    serializer_class = MovieInSelectionSerializer
+
+class MovieInSelectionDetail(generics.ListCreateAPIView):
+    queryset = MovieInSelection.objects.all()
+    serializer_class = MovieInSelectionSerializer
+
 
 class SelectionList(generics.ListCreateAPIView):
     queryset = Selection.objects.all()
@@ -35,6 +37,7 @@ class SelectionDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SelectionSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
+
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -42,6 +45,7 @@ class UserList(generics.ListAPIView):
 class UserDetail(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
 
 class VoteList(generics.ListCreateAPIView):
     queryset = Vote.objects.all()
