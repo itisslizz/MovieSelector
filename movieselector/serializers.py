@@ -29,3 +29,11 @@ class RoundSerializer(serializers.ModelSerializer):
     class Meta:
         model = Round
         fields = ('id','number','state','selection')
+
+class VoteSerializer(serializers.ModelSerializer):
+    voting_round = serializers.ReadOnlyField(source='voting_round.id')
+    movie_in_selection = serializers.ReadOnlyField(source='movie_in_selection.id')
+    voter = serializers.ReadOnlyField(source='voter.username')
+    class Meta:
+        model = Round
+        fields = ('id','voting_round','is_upvote','movie_in_selection','voter')

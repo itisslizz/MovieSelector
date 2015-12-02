@@ -11,6 +11,8 @@ urlpatterns = [
     url(r'^selections/(?P<pk>[0-9]+)/$', views.SelectionDetail.as_view()),
     url(r'^rounds/$', views.RoundList.as_view()),
     url(r'^rounds/(?P<pk>[0-9]+)/$', views.RoundDetail.as_view()),
+    url(r'^votes/$', views.VoteList.as_view()),
+    url(r'^votes/(?P<pk>[0-9]+)/$', views.VoteDetail.as_view()),
 ]
 
 urlpatterns += [
