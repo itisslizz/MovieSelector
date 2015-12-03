@@ -1,4 +1,4 @@
-from movieselector.models import Movie, Round, Selection
+from movieselector.models import Movie,  Selection, MovieInSelection, Vote
 from movieselector.permissions import IsOwnerOrReadOnly, IsParticipantOrReadOnly
 from movieselector.serializers import MovieSerializer, UserSerializer, SelectionSerializer, VoteSerializer, MovieInSelectionSerializer
 from rest_framework import generics, permissions
@@ -53,7 +53,7 @@ class UserDetail(generics.RetrieveAPIView):
 class VoteList(generics.ListCreateAPIView):
     queryset = Vote.objects.all()
     serializer_class = VoteSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def perform_create(self, serializer):
         serializer.save(voter=self.request.user)

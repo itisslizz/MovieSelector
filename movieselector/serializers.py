@@ -9,15 +9,6 @@ class MovieSerializer(serializers.ModelSerializer):
     fields = ('movie_id', 'imdb_id')
 
 
-class MovieInSelectionSerializer(serializers.ModelSerializer):
-    movie = serializers.ReadOnlyField(source='movie.movie_id')
-    selection = serializers.ReadOnlyField(source='selection.id')
-    owner = serializers.ReadOnlyField(source='owner.username')
-    class Meta:
-        model = Round
-        fields = ('id', 'movie', 'selection','owner')
-
-
 class UserSerializer(serializers.ModelSerializer):
     selections_owned = serializers.PrimaryKeyRelatedField(many=True, queryset=Selection.objects.all())
 
@@ -28,16 +19,22 @@ class UserSerializer(serializers.ModelSerializer):
 
 class SelectionSerializer(serializers.ModelSerializer):
   owner = serializers.ReadOnlyField(source='owner.username')
-  users = UserSerializer(many=True)
+  #users = UserSerializer(many=True)
 
   class Meta:
     model = Selection
-    fields = ('id','owner','users','created')
+    fields = ('id','owner','created','max_movies_per_user','has_winner','in_round')
+
+class MovieInSelectionSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
+    selection = serializers.SlugRelatedField(queryset=Selection.objects.all(),slug_field='id')
+    class Meta:
+        model = MovieInSelection
+        fields = ('id', 'movie', 'selection','owner')
 
 
 class VoteSerializer(serializers.ModelSerializer):
-    movie_in_selection = serializers.ReadOnlyField(source='movie_in_selection.id')
     voter = serializers.ReadOnlyField(source='voter.username')
     class Meta:
-        model = Round
-        fields = ('id','is_upvote','movie_in_selection','voter')
+        model = Vote
+        fields = ('id','is_upvote','voting_round','movie_in_selection','voter')

@@ -29,18 +29,11 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='Round',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('number', models.IntegerField()),
-                ('state', models.CharField(default=b'open', max_length=10)),
-            ],
-        ),
-        migrations.CreateModel(
             name='Selection',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('created', models.DateTimeField(auto_now_add=True)),
+                ('in_round', models.IntegerField(default=0)),
                 ('max_movies_per_user', models.IntegerField(default=3)),
                 ('has_winner', models.BooleanField(default=False)),
                 ('owner', models.ForeignKey(related_name='selections_owned', to=settings.AUTH_USER_MODEL)),
@@ -54,16 +47,12 @@ class Migration(migrations.Migration):
             name='Vote',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('created', models.DateTimeField(auto_now_add=True)),
+                ('voting_round', models.IntegerField()),
                 ('is_upvote', models.BooleanField(default=False)),
                 ('movie_in_selection', models.ForeignKey(to='movieselector.MovieInSelection')),
                 ('voter', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
-                ('voting_round', models.ForeignKey(related_name='votes', to='movieselector.Round')),
             ],
-        ),
-        migrations.AddField(
-            model_name='round',
-            name='selection',
-            field=models.ForeignKey(related_name='rounds', to='movieselector.Selection'),
         ),
         migrations.AddField(
             model_name='movieinselection',
