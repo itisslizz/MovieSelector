@@ -18,8 +18,11 @@ class MovieInSelectionList(generics.ListCreateAPIView):
     queryset = MovieInSelection.objects.all()
     serializer_class = MovieInSelectionSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
-                          IsOwnerOrReadOnly,
-                          IsParticipantOrReadOnly,)
+                          IsOwnerOrReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(added_by=self.request.user)
+
 
 class MovieInSelectionDetail(generics.ListCreateAPIView):
     queryset = MovieInSelection.objects.all()

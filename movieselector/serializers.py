@@ -26,11 +26,10 @@ class SelectionSerializer(serializers.ModelSerializer):
     fields = ('id','owner','created','max_movies_per_user','has_winner','in_round')
 
 class MovieInSelectionSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
-    selection = serializers.SlugRelatedField(queryset=Selection.objects.all(),slug_field='id')
+    added_by = serializers.ReadOnlyField(source='added_by.username')
     class Meta:
         model = MovieInSelection
-        fields = ('id', 'movie', 'selection','owner')
+        fields = ('id', 'movie', 'selection','added_by','is_eliminated')
 
 
 class VoteSerializer(serializers.ModelSerializer):
