@@ -13,19 +13,12 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Movie',
-            fields=[
-                ('movie_id', models.IntegerField(serialize=False, primary_key=True)),
-                ('imdb_id', models.CharField(max_length=10)),
-            ],
-        ),
-        migrations.CreateModel(
             name='MovieInSelection',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('movie_id', models.IntegerField()),
                 ('is_eliminated', models.BooleanField(default=False)),
                 ('added_by', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
-                ('movie', models.ForeignKey(to='movieselector.Movie')),
             ],
         ),
         migrations.CreateModel(

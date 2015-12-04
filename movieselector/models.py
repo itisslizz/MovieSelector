@@ -1,8 +1,5 @@
 from django.db import models
 
-class Movie(models.Model):
-  movie_id = models.IntegerField(primary_key=True)
-  imdb_id = models.CharField(max_length=10)
 
 class Selection(models.Model):
   created = models.DateTimeField(auto_now_add=True)
@@ -16,10 +13,10 @@ class Selection(models.Model):
       ordering = ('created',)
 
 class MovieInSelection(models.Model):
-  movie = models.ForeignKey(Movie)
+  movie_id = models.IntegerField()
   selection = models.ForeignKey(Selection, related_name="movies")
   is_eliminated = models.BooleanField(default=False)
-  added_by = models.ForeignKey('auth.User')
+  owner = models.ForeignKey('auth.User')
 
 class Vote(models.Model):
   created = models.DateTimeField(auto_now_add=True)
