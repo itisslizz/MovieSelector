@@ -26,7 +26,6 @@ class IsParticipantOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        print view
         if "MovieInSelection":
             selection = obj.selection
         elif "Votes":

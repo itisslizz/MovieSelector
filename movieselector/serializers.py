@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
-from movieselector.models import Selection, MovieInSelection, Vote
+from movieselector.models import Selection, MovieInSelection, UserInSelection, Vote
 from django.contrib.auth.models import User
 
 
@@ -20,14 +20,21 @@ class SelectionSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Selection
-    fields = ('id','owner','created','max_movies_per_user','has_winner','in_round','movies')
+    fields = ('id','owner','created','max_movies_per_user','has_winner','in_round','movies','users')
 
 class MovieInSelectionSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
+    selection = serializers.ReadOnlyField(source='selection.id')
+
     class Meta:
         model = MovieInSelection
         fields = ('id', 'movie_id', 'selection','owner','is_eliminated')
 
+class UserInSelectionSerializer(serializers.ModelSerializer):
+    selection = serializers.ReadOnlyField(source='selection.id')
+    class Meta:
+        model = UserInSelection
+        fields = ('id', 'user', 'selection','accepted')
 
 class VoteSerializer(serializers.ModelSerializer):
     voter = serializers.ReadOnlyField(source='voter.username')
