@@ -69,16 +69,29 @@ class MovieInSelectionDetail(generics.ListCreateAPIView):
 
     def get_queryset(self):
         selection_id = self.kwargs['selection_id']
-        return UserInSelection.objects.filter(selection__id=selection_id)
+        return MovieInSelection.objects.filter(selection__id=selection_id)
 
 class VoteList(generics.ListCreateAPIView):
-    queryset = Vote.objects.all()
     serializer_class = VoteSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
+    def get_queryset(self):
+        selection_id = self.kwargs['selection_id']
+        voting_round = self.kwargs['voting_round']
+        return UserInSelection.objects.filter(selection__id=selection_id).filter(voting_round=voting_round)
+
     def perform_create(self, serializer):
-        serializer.save(voter=self.request.user)
+        voting_round = self.kwargs['voting_round']
+        selection_id = self.kwargs['selection_id']
+        selection = Selection.objects.get(id=selection_id)
+        serializer.save(voter=self.request.user,
+                        selection=selection,
+                        voting_round = voting_round)
 
 class VoteDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Vote.objects.all()
     serializer_class = VoteSerializer
+
+    def get_queryset(self):
+        selection_id = self.kwargs['selection_id']
+        voting_round = self.kwargs['voting_round']
+        return UserInSelection.objects.filter(selection__id=selection_id).filter(voting_round=voting_round)

@@ -30,4 +30,5 @@ class Vote(models.Model):
   voting_round = models.IntegerField()
   is_upvote = models.BooleanField(default=False)
   movie_in_selection = models.ForeignKey(MovieInSelection)
+  selection = models.ForeignKey(Selection, related_name="votes")
   voter = models.ForeignKey('auth.User')
