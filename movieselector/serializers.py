@@ -39,7 +39,7 @@ class UserInSelectionSerializer(serializers.ModelSerializer):
 class VoteSerializer(serializers.ModelSerializer):
     voter = serializers.ReadOnlyField(source='voter.username')
     selection = serializers.ReadOnlyField(source='selection.id')
-
+    voting_round = serializers.ReadOnlyField()
     class Meta:
         model = Vote
         fields = ('id','is_upvote','voting_round','movie_in_selection','selection','voter')

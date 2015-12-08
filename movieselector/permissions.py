@@ -26,11 +26,10 @@ class IsParticipantOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        if "MovieInSelection":
-            selection = obj.selection
-        elif "Votes":
-            # not sure if this works
-            selection = obj.movie_in_selection.selection
-
+        allowed = request.user in obj.selection.users.order_by('id')
+        if allowed:
+            print "User can POST"
+        else:
+            print "User cannot POST"
         # Write permissions are only allowed to participants of a Selection
-        return request.user in obj.selection(users)
+        return allowed
