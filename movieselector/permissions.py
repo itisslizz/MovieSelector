@@ -1,5 +1,5 @@
 from rest_framework import permissions
-
+from movieselector.models import Selection
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
@@ -15,21 +15,31 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         # Write permissions are only allowed to the owner of the snippet.
         return obj.owner == request.user
 
-class IsParticipantOrReadOnly(permissions.BasePermission):
+class IsOwnerOrReadOnlyList(permissions.BasePermission):
     """
-    Custom permission to only allow Participants of a Selection to add movies.
+    Custom permission to only allow owner of selection to add users to it
     """
 
-    def has_object_permission(self, request, view, obj):
+    def has_permission(self, request, view):
         #
         #
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        allowed = request.user in obj.selection.users.order_by('id')
-        if allowed:
-            print "User can POST"
-        else:
-            print "User cannot POST"
+        selection_id = view.kwargs['selection_id']
         # Write permissions are only allowed to participants of a Selection
-        return allowed
+        return request.user == Selection.objects.get(id=selection_id).owner
+
+class IsParticipantOrReadOnly(permissions.BasePermission):
+    """
+    Custom permission to only allow Participants of a Selection to add movies.
+    """
+
+    def has_permission(self, request, view):
+        #
+        #
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        selection_id = view.kwargs['selection_id']
+        return request.user in Selection.objects.get(id=selection_id).users.order_by('id')
