@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
+from rest_framework import validators
 from movieselector.models import Selection, MovieInSelection, UserInSelection, Vote
 from django.contrib.auth.models import User
 
@@ -10,7 +11,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'selections_owned')
-
 
 class SelectionSerializer(serializers.ModelSerializer):
   owner = serializers.ReadOnlyField(source='owner.username')
@@ -32,6 +32,20 @@ class MovieInSelectionSerializer(serializers.ModelSerializer):
 
 class UserInSelectionSerializer(serializers.ModelSerializer):
     selection = serializers.ReadOnlyField(source='selection.id')
+    class Meta:
+        model = UserInSelection
+        fields = ('id', 'user', 'selection','accepted')
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=UserInSelection.objects.all(),
+                fields=('selection', 'user'),
+                message='This user is already in the selection.'
+            )
+        ]
+
+class UserInSelectionDetailSerializer(serializers.ModelSerializer):
+    selection = serializers.ReadOnlyField(source='selection.id')
+    user = serializers.ReadOnlyField(source='user.id')
     class Meta:
         model = UserInSelection
         fields = ('id', 'user', 'selection','accepted')

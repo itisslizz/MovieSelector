@@ -30,6 +30,23 @@ class IsOwnerOrReadOnlyList(permissions.BasePermission):
         # Write permissions are only allowed to participants of a Selection
         return request.user == Selection.objects.get(id=selection_id).owner
 
+class IsUserPutOrOwnerDeleteOnly(permissions.BasePermission):
+    """
+    Custom permission to only allow responsible user to edit accepted value
+    and owner of selection to delete users
+    """
+    def has_object_permission(self, request, view, obj):
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        if request.method in ['PUT', 'PATCH']:
+            return obj.user == request.user
+
+        # Write permissions are only allowed to the owner of the snippet.
+        return obj.selection.owner == request.user
+
 class IsParticipantOrReadOnly(permissions.BasePermission):
     """
     Custom permission to only allow Participants of a Selection to add movies.

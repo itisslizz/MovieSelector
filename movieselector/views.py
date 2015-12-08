@@ -1,6 +1,6 @@
 from movieselector.models import Selection, MovieInSelection, Vote, UserInSelection
-from movieselector.permissions import IsOwnerOrReadOnly, IsParticipantOrReadOnly, IsOwnerOrReadOnlyList
-from movieselector.serializers import UserSerializer, UserInSelectionSerializer, SelectionSerializer, VoteSerializer, MovieInSelectionSerializer
+from movieselector.permissions import IsOwnerOrReadOnly, IsParticipantOrReadOnly, IsOwnerOrReadOnlyList, IsUserPutOrOwnerDeleteOnly
+from movieselector.serializers import UserSerializer, UserInSelectionSerializer, UserInSelectionDetailSerializer, SelectionSerializer, VoteSerializer, MovieInSelectionSerializer
 from rest_framework import generics, permissions
 from django.contrib.auth.models import User
 
@@ -32,7 +32,7 @@ class UserInSelectionList(generics.ListCreateAPIView):
     serializer_class = UserInSelectionSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsOwnerOrReadOnlyList)
-                          
+
     def get_queryset(self):
         selection_id = self.kwargs['selection_id']
         return UserInSelection.objects.filter(selection__id=selection_id)
@@ -43,8 +43,9 @@ class UserInSelectionList(generics.ListCreateAPIView):
         serializer.save(selection=selection)
 
 class UserInSelectionDetail(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = UserInSelectionSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    serializer_class = UserInSelectionDetailSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+                          IsUserPutOrOwnerDeleteOnly,)
 
     def get_queryset(self):
         selection_id = self.kwargs['selection_id']
