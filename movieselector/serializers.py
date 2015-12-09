@@ -28,18 +28,16 @@ class MovieInSelectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MovieInSelection
-        fields = ('id', 'movie_id', 'selection','owner','is_eliminated')
+        fields = ('id','movie_id','selection','owner','is_eliminated')
 
 class UserInSelectionSerializer(serializers.ModelSerializer):
     selection = serializers.ReadOnlyField(source='selection.id')
     class Meta:
         model = UserInSelection
-        fields = ('id', 'user', 'selection','accepted')
+        fields = ('id','user','selection','accepted')
         validators = [
-            validators.UniqueTogetherValidator(
-                queryset=UserInSelection.objects.all(),
-                fields=('selection', 'user'),
-                message='This user is already in the selection.'
+            validators.UniqueTogetherWithSelection(
+                fields=('user',)
             )
         ]
 
