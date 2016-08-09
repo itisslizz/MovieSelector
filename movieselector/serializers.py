@@ -2,6 +2,7 @@
 from rest_framework import serializers
 from rest_framework import validators
 from movieselector.models import Selection, MovieInSelection, UserInSelection, Vote
+from movieselector import validators
 from django.contrib.auth.models import User
 
 
