@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from models import UserInSelection
+from movieselector.models import UserInSelection
 
 def is_next_or_current_round(value, id):
     selection = Selection.object(id)

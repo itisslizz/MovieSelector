@@ -38,7 +38,6 @@ class UserInSelectionList(generics.ListCreateAPIView):
         return UserInSelection.objects.filter(selection__id=selection_id)
 
     def perform_create(self, serializer):
-        print "EHE"
         selection_id = self.kwargs['selection_id']
         selection = Selection.objects.get(id=selection_id)
         serializer.save(selection=selection)
@@ -49,7 +48,6 @@ class UserInSelectionDetail(generics.RetrieveUpdateDestroyAPIView):
                           IsUserPutOrOwnerDeleteOnly,)
 
     def get_queryset(self):
-        print "HEHE"
         selection_id = self.kwargs['selection_id']
         return UserInSelection.objects.filter(selection__id=selection_id)
 
