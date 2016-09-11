@@ -11,6 +11,7 @@ urlpatterns = [
     url(r'^selections/(?P<selection_id>[0-9]+)/users/(?P<pk>[0-9]+)/$', views.UserInSelectionDetail.as_view()),
     url(r'^users/$', views.UserList.as_view()),
     url(r'^users/(?P<pk>[0-9]+)/$', views.UserDetail.as_view()),
+    url(r'^users/register/$', views.UserRegister.as_view()),
     url(r'^selections/(?P<selection_id>[0-9]+)/rounds/(?P<voting_round>[0-9]+)/votes/$', views.VoteList.as_view()),
     url(r'^selections/(?P<selection_id>[0-9]+)/rounds/(?P<voting_round>[0-9]+)/votes/(?P<pk>[0-9]+)/$', views.VoteDetail.as_view()),
 ]

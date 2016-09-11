@@ -1,5 +1,8 @@
 from django.db import models
-
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from rest_framework.authtoken.models import Token
 
 class Selection(models.Model):
     """
@@ -44,3 +47,14 @@ class Vote(models.Model):
     movie_in_selection = models.ForeignKey(MovieInSelection)
     selection = models.ForeignKey(Selection, related_name="votes")
     voter = models.ForeignKey('auth.User')
+
+
+
+
+@receiver(post_save, sender=User)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    """
+    Make sure every User has a Token generated on registering
+    """
+    if created:
+        Token.objects.create(user=instance)
