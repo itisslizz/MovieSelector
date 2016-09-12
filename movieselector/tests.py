@@ -67,3 +67,42 @@ class CreateSelectionTestCase(TestCase):
         response = client.post('/selections/')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+class AddUserToSelectionTestCase(TestCase):
+    def setUp(self):
+        client = APIClient()
+        client.post('/users/register/', {'username': 'testuser', 'password': 'test'}, format='json')
+        token = Token.objects.get(user__username='testuser')
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        response = client.post('/selections/')
+
+    def test_add_movie(self):
+        token = Token.objects.get(user__username='testuser')
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        selection = Selection.objects.get(owner__username='testuser')
+        user = User.objects.get(username='testuser')
+        response = client.post('/selections/' + str(selection.id) + '/users/', {'user': user.id}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+'''
+class AddMovieToSelectionTestCase(TestCase):
+    def setUp(self):
+        client = APIClient()
+        client.post('/users/register/', {'username': 'testuser', 'password': 'test'}, format='json')
+        token = Token.objects.get(user__username='testuser')
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        response = client.post('/selections/')
+
+    def test_add_movie(self):
+        token = Token.objects.get(user__username='testuser')
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        selection = Selection.objects.get(owner__username='testuser')
+        response = client.post('/selections/' + str(selection.id) + '/movies/', {'movie_id': 1}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+'''

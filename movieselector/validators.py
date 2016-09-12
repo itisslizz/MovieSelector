@@ -11,7 +11,7 @@ def is_next_or_current_round(value, id):
 
 def is_in_range(value):
     """
-    
+
     """
     if value < 1:
         raise serializers.ValidationError('Is not in the allowed range.')
@@ -23,11 +23,14 @@ class UniqueTogetherWithSelection(object):
     """
     def __init__(self, fields):
         self.fields = fields
+        print(fields)
 
     def __call__(self, values):
-        if len(UserInSelection.objects.filter(user=value, selection=self.selection)):
+        if len(UserInSelection.objects.filter(user=values["user"], selection=self.selection)):
             message = "User is already participating in selection"
             raise serializers.ValidationError(message)
 
     def set_context(self, serializer_field):
-        self.selection = serializer_field.parent.selection
+        #print(serializer_field)
+        print(serializer_field)
+        self.selection = serializer_field.parent.instance.selection
