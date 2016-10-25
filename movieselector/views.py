@@ -1,7 +1,7 @@
 from movieselector.models import Selection, MovieInSelection, Vote, UserInSelection
 from movieselector.permissions import IsOwnerOrReadOnly, IsParticipantOrReadOnly, IsOwnerOrReadOnlyList, IsUserPutOrOwnerDeleteOnly
 from movieselector.serializers import UserSerializer, UserRegisterSerializer, UserInSelectionSerializer, UserInSelectionDetailSerializer, SelectionSerializer, VoteSerializer, MovieInSelectionSerializer
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, serializers
 from django.contrib.auth.models import User
 
 from django.core.exceptions import ValidationError
@@ -50,7 +50,7 @@ class UserInSelectionList(generics.ListCreateAPIView):
             selection__id=selection_id,
             user=user);
         if len(users):
-            raise ValidationError('User Already In Selection')
+            raise serializers.ValidationError({'message':'User Already In Selection'})
         selection = Selection.objects.get(id=selection_id)
         serializer.save(selection=selection)
 
