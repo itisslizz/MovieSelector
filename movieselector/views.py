@@ -1,6 +1,7 @@
 from movieselector.models import Selection, MovieInSelection, Vote, UserInSelection
 from movieselector.permissions import IsOwnerOrReadOnly, IsParticipantOrReadOnly, IsOwnerOrReadOnlyList, IsUserPutOrOwnerDeleteOnly
 from movieselector.serializers import UserSerializer, UserRegisterSerializer, UserInSelectionSerializer, UserInSelectionDetailSerializer, SelectionSerializer, VoteSerializer, MovieInSelectionSerializer
+from movieselector.validators import *
 from rest_framework import generics, permissions, serializers
 from django.contrib.auth.models import User
 
@@ -33,6 +34,15 @@ class SelectionDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsOwnerOrReadOnly,)
 
+    # perform update
+    # Only allow updates to fields if in round 0
+    # Only allow updates to in_round/has_winner if in_round > 0
+    # Only allow increments of 1 to in_round
+    # Only allow increment to in_round if all votes have been cast (active_movies*userinselections)
+    # Only allow has_winner to true if only one movie is not eliminated
+    # Allow no changes after has_winner set to true
+
+
 
 class UserInSelectionList(generics.ListCreateAPIView):
     serializer_class = UserInSelectionSerializer
@@ -45,13 +55,12 @@ class UserInSelectionList(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         selection_id = self.kwargs['selection_id']
-        user = serializer.validated_data['user']
-        users = UserInSelection.objects.filter(
-            selection__id=selection_id,
-            user=user);
-        if len(users):
-            raise serializers.ValidationError({'message':'User Already In Selection'})
         selection = Selection.objects.get(id=selection_id)
+        selection_not_started(selection)
+        users = UserInSelection.objects.filter(
+            selection__id=selection_id);
+
+        user_is_unique(users, serializer.validated_data['user'])
         serializer.save(selection=selection)
 
 class UserInSelectionDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -74,14 +83,14 @@ class MovieInSelectionList(generics.ListCreateAPIView):
         return MovieInSelection.objects.filter(selection__id=selection_id)
 
     def perform_create(self, serializer):
-        selection_id = self.kwargs['selection_id']
-        movie_id = serializer.validated_data['movie_id']
-        movies = UserInSelection.objects.filter(
-            selection__id=selection_id,
-            movie_id=movie_id);
-        if len(movies):
-            raise serializers.ValidationError({'message':'Movie Already In Selection'})
-        selection = Selection.objects.get(id=selection_id)
+        selection = Selection.objects.get(id=self.kwargs['selection_id'])
+        selection_not_started(selection)
+        movies = MovieInSelection.objects.filter(
+            selection=selection)
+
+        movie_is_unique(movies, serializer.validated_data['movie_id'])
+        user_not_maxed_out(movies, self.request.user, selection.max_movies_per_user)
+
         serializer.save(owner=self.request.user, selection=selection)
 
 
@@ -92,6 +101,12 @@ class MovieInSelectionDetail(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         selection_id = self.kwargs['selection_id']
         return MovieInSelection.objects.filter(selection__id=selection_id).all()
+
+    #perform_update
+    #  Only allow updates to is_eliminated field
+    #  Only allow is_eliminated to True updates (no Backsies)
+    #  Only allow updates if voting_round is complete
+    #  Only allow is_eliminated to True if exists movie with more upvotes
 
 class VoteList(generics.ListCreateAPIView):
     serializer_class = VoteSerializer
@@ -112,14 +127,13 @@ class VoteList(generics.ListCreateAPIView):
         selection_id = self.kwargs['selection_id']
         movie_in_selection = serializer.validated_data['movie_in_selection']
         selection = Selection.objects.get(id=selection_id)
-        if selection.in_round != voting_round:
-            raise serializers.ValidationError({'message':'Can only vote in active round'})
+        round_is_valid(selection, voting_round)
         votes = Vote.objects.filter(
             selection=selection,
             movie_in_selection=movie_in_selection,
-            voting_round=voting_round)
-        if len(votes):
-            raise serializers.ValidationError({'message':'You can only vote once per movie per round'})
+            voting_round=voting_round,
+            voter=self.request.user)
+        not_yet_voted(len(votes))
         serializer.save(voter=self.request.user,
                         selection=selection,
                         voting_round = voting_round)
