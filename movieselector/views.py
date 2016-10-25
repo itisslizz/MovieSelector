@@ -4,6 +4,8 @@ from movieselector.serializers import UserSerializer, UserRegisterSerializer, Us
 from rest_framework import generics, permissions
 from django.contrib.auth.models import User
 
+from django.core.exceptions import ValidationError
+
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -43,6 +45,12 @@ class UserInSelectionList(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         selection_id = self.kwargs['selection_id']
+        user = serializer.validated_data['user']
+        users = UserInSelection.objects.filter(
+            selection__id=selection_id,
+            user=user);
+        if len(users):
+            raise ValidationError('User Already In Selection')
         selection = Selection.objects.get(id=selection_id)
         serializer.save(selection=selection)
 

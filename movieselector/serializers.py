@@ -53,11 +53,6 @@ class UserInSelectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserInSelection
         fields = ('id','user','selection','accepted')
-        validators = [
-            validators.UniqueTogetherWithSelection(
-                fields=('user',)
-            )
-        ]
 
 class UserInSelectionDetailSerializer(serializers.ModelSerializer):
     selection = serializers.ReadOnlyField(source='selection.id')
