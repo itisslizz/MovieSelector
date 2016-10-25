@@ -75,6 +75,12 @@ class MovieInSelectionList(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         selection_id = self.kwargs['selection_id']
+        movie_id = serializer.validated_data['movie_id']
+        movies = UserInSelection.objects.filter(
+            selection__id=selection_id,
+            movie_id=movie_id);
+        if len(movies):
+            raise serializers.ValidationError({'message':'Movie Already In Selection'})
         selection = Selection.objects.get(id=selection_id)
         serializer.save(owner=self.request.user, selection=selection)
 
@@ -104,7 +110,16 @@ class VoteList(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         voting_round = self.kwargs['voting_round']
         selection_id = self.kwargs['selection_id']
+        movie_in_selection = serializer.validated_data['movie_in_selection']
         selection = Selection.objects.get(id=selection_id)
+        if selection.in_round != voting_round:
+            raise serializers.ValidationError({'message':'Can only vote in active round'})
+        votes = Vote.objects.filter(
+            selection=selection,
+            movie_in_selection=movie_in_selection,
+            voting_round=voting_round)
+        if len(votes):
+            raise serializers.ValidationError({'message':'You can only vote once per movie per round'})
         serializer.save(voter=self.request.user,
                         selection=selection,
                         voting_round = voting_round)
