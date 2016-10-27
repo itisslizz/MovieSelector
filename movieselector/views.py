@@ -102,11 +102,17 @@ class MovieInSelectionDetail(generics.RetrieveUpdateDestroyAPIView):
         selection_id = self.kwargs['selection_id']
         return MovieInSelection.objects.filter(selection__id=selection_id).all()
 
-    #perform_update
-    #  Only allow updates to is_eliminated field
-    #  Only allow is_eliminated to True updates (no Backsies)
-    #  Only allow updates if voting_round is complete
-    #  Only allow is_eliminated to True if exists movie with more upvotes
+    def perform_update(self, serializer):
+        original = self.get_object().__dict__
+        selection = Selection.objects.get(id=original['selection_id'])
+        updated = serializer.validated_data
+
+        only_change_is_eliminated(original, updated)
+        eliminated_to_false(original['is_eliminated'], updated['is_eliminated'])
+        voting_round_complete(original['selection_id'])
+        has_been_eliminated(original, getattr(selection, 'in_round'))
+        
+        serializer.save()
 
 class VoteList(generics.ListCreateAPIView):
     serializer_class = VoteSerializer
