@@ -7,13 +7,16 @@ from django.contrib.auth.models import User
 
 from django.core.exceptions import ValidationError
 
+
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+
 class UserRegister(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegisterSerializer
+
 
 class UserDetail(generics.RetrieveAPIView):
     queryset = User.objects.all()
@@ -28,20 +31,41 @@ class SelectionList(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+
 class SelectionDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Selection.objects.all()
     serializer_class = SelectionSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsOwnerOrReadOnly,)
 
+    def perform_update(self, serializer):
+        original = self.get_object()
+        update = serializer.validated_data
+        not_yet_done(original)
+        if getattr(original, 'in_round') == 0:
+            is_unchanged(getattr(original, 'has_winner'),
+                         update['has_winner'])
+            if (not (update['in_round'] == getattr(original,'in_round'))):
+                is_one_increment(update['in_round'],
+                                 getattr(original,'in_round'))
+                # all_users_accepted_or_declined
+            if (not (update['max_movies_per_user'] == getattr(original,
+                                                              'max_movies_per_user'))):
+                new_max_movies_not_surpassed(update['max_movies_per_user'],
+                                             getattr(original,'id'))
+        else:
+            is_unchanged(getattr(original, 'max_movies_per_user'),
+                         update['max_movies_per_user'])
+            if (update['has_winner']):
+                only_one_movie_not_eliminated(original)
+                is_unchanged(getattr(original['in_round']), update['in_round'])
+            elif (not (update['in_round'] == getattr(original,'in_round'))):
+                is_one_increment(update['in_round'],
+                                 getattr(original,'in_round'))
+                voting_round_complete(getattr(original, 'id'))
+        serializer.save()
     # perform update
-    # Only allow updates to fields if in round 0
-    # Only allow updates to in_round/has_winner if in_round > 0
-    # Only allow increments of 1 to in_round
-    # Only allow increment to in_round if all votes have been cast (active_movies*userinselections)
-    # Only allow has_winner to true if only one movie is not eliminated
     # Allow no changes after has_winner set to true
-
 
 
 class UserInSelectionList(generics.ListCreateAPIView):
@@ -58,10 +82,11 @@ class UserInSelectionList(generics.ListCreateAPIView):
         selection = Selection.objects.get(id=selection_id)
         selection_not_started(selection)
         users = UserInSelection.objects.filter(
-            selection__id=selection_id);
+            selection__id=selection_id)
 
         user_is_unique(users, serializer.validated_data['user'])
         serializer.save(selection=selection)
+
 
 class UserInSelectionDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserInSelectionDetailSerializer
@@ -89,7 +114,8 @@ class MovieInSelectionList(generics.ListCreateAPIView):
             selection=selection)
 
         movie_is_unique(movies, serializer.validated_data['movie_id'])
-        user_not_maxed_out(movies, self.request.user, selection.max_movies_per_user)
+        user_not_maxed_out(movies, self.request.user,
+                           selection.max_movies_per_user)
 
         serializer.save(owner=self.request.user, selection=selection)
 
@@ -107,12 +133,14 @@ class MovieInSelectionDetail(generics.RetrieveUpdateDestroyAPIView):
         selection = Selection.objects.get(id=original['selection_id'])
         updated = serializer.validated_data
 
-        only_change_is_eliminated(original, updated)
-        eliminated_to_false(original['is_eliminated'], updated['is_eliminated'])
+        is_unchanged(original['movie_id'], updated['movie_id'])
+        eliminated_to_false(
+            original['is_eliminated'], updated['is_eliminated'])
         voting_round_complete(original['selection_id'])
         has_been_eliminated(original, getattr(selection, 'in_round'))
-        
+
         serializer.save()
+
 
 class VoteList(generics.ListCreateAPIView):
     serializer_class = VoteSerializer
@@ -122,7 +150,8 @@ class VoteList(generics.ListCreateAPIView):
     def get_queryset(self):
         selection_id = self.kwargs['selection_id']
         voting_round = self.kwargs['voting_round']
-        queryset = Vote.objects.filter(selection__id=selection_id).filter(voting_round=voting_round)
+        queryset = Vote.objects.filter(
+            selection__id=selection_id).filter(voting_round=voting_round)
         movie_id = self.request.query_params.get('movie_id', None)
         if movie_id is not None:
             queryset = queryset.filter(movie_in_selection__id=movie_id)
@@ -140,11 +169,13 @@ class VoteList(generics.ListCreateAPIView):
             voting_round=voting_round,
             voter=self.request.user)
         not_yet_voted(len(votes))
+        has_multiple_movies(selection_id)
         serializer.save(voter=self.request.user,
                         selection=selection,
-                        voting_round = voting_round)
+                        voting_round=voting_round)
 
-class VoteDetail(generics.RetrieveUpdateDestroyAPIView):
+
+class VoteDetail(generics.RetrieveDestroyAPIView):
     serializer_class = VoteSerializer
     permission_classes = (IsOwnerOrReadOnly,)
 

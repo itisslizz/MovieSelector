@@ -4,6 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
+
 class Selection(models.Model):
     """
     Represents a Selection containing Movies and Users that can vote on these Users
@@ -18,14 +19,16 @@ class Selection(models.Model):
     class Meta:
         ordering = ('created',)
 
+
 class UserInSelection(models.Model):
     """
     Represents the relation of a user being part of a Selection
     """
     user = models.ForeignKey('auth.User', related_name="selections")
     selection = models.ForeignKey(Selection)
-    #TODO: change to False when other is implemented
+    # TODO: change to False when other is implemented
     accepted = models.BooleanField(default=True)
+
 
 class MovieInSelection(models.Model):
     """
@@ -47,8 +50,6 @@ class Vote(models.Model):
     movie_in_selection = models.ForeignKey(MovieInSelection)
     selection = models.ForeignKey(Selection, related_name="votes")
     voter = models.ForeignKey('auth.User')
-
-
 
 
 @receiver(post_save, sender=User)
