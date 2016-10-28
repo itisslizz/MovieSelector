@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from movieselector.models import UserInSelection, Vote, MovieInSelection, Selection
 
-def not_yet_done(Selection):
+def not_yet_done(selection):
     if getattr(selection, 'has_winner'):
         raise serializers.ValidationError(
             {'message': 'This selection has been completed already'}
@@ -16,8 +16,8 @@ def new_max_movies_not_surpassed(new_max, selection_id):
             {'message': 'New maximum already surpassed'}
         )
 
-def only_one_movie_not_eliminated(selection_id):
-    active_movies = MovieInSelection.objects.filter(selection__id=selection_id).\
+def only_one_movie_not_eliminated(selection):
+    active_movies = MovieInSelection.objects.filter(selection=selection).\
         filter(is_eliminated=False)
     if active_movies.count() > 1:
         raise serializers.ValidationError(
@@ -87,7 +87,7 @@ def voting_round_complete(selection_id):
     users = getattr(selection, 'users').count()
     movies = MovieInSelection.objects.filter(selection__id=selection_id).\
         filter(is_eliminated=False).count()
-    if not votes == users * movies:
+    if not votes >= users * movies:
         raise serializers.ValidationError(
             {'message': 'The voting round has not been completed no update allowed'}
         )
@@ -126,10 +126,15 @@ def round_is_valid(selection, voting_round):
             {'message': 'Can only vote in active round'}
         )
 
+def movie_is_in_selection(selection, movie):
+    if not (getattr(movie, 'selection') == selection):
+        raise serializers.ValidationError(
+            {'message':'The chosen movie is not in this selection'}
+        )
 
 def has_multiple_movies(selection_id):
     active_movies = MovieInSelection.objects.filter(selection__id=selection_id).\
-        filter(is_eliminated=False)
+        filter(is_eliminated=False).count()
     if active_movies < 2:
         raise serializers.ValidationError(
             {'message': 'Selection has a winner'}

@@ -1,5 +1,5 @@
 from movieselector.models import Selection, MovieInSelection, Vote, UserInSelection
-from movieselector.permissions import IsOwnerOrReadOnly, IsParticipantOrReadOnly, IsOwnerOrReadOnlyList, IsUserPutOrOwnerDeleteOnly
+from movieselector.permissions import IsOwnerOrReadOnly, IsParticipantOrReadOnly, IsOwnerOrReadOnlyList, IsUserPutOrOwnerDeleteOnly, IsOwnerOfSelectionOrReadOnly
 from movieselector.serializers import UserSerializer, UserRegisterSerializer, UserInSelectionSerializer, UserInSelectionDetailSerializer, SelectionSerializer, VoteSerializer, MovieInSelectionSerializer
 from movieselector.validators import *
 from rest_framework import generics, permissions, serializers
@@ -12,6 +12,16 @@ class UserList(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    def get_queryset(self):
+        """
+        Optionally restricts the returned purchases to a given user,
+        by filtering against a `username` query parameter in the URL.
+        """
+        queryset = User.objects.all()
+        username = self.request.query_params.get('username', None)
+        if username is not None:
+            queryset = queryset.filter(username__icontains=username)
+        return queryset
 
 class UserRegister(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -58,11 +68,12 @@ class SelectionDetail(generics.RetrieveUpdateDestroyAPIView):
                          update['max_movies_per_user'])
             if (update['has_winner']):
                 only_one_movie_not_eliminated(original)
-                is_unchanged(getattr(original['in_round']), update['in_round'])
+                is_unchanged(getattr(original, 'in_round'), update['in_round'])
             elif (not (update['in_round'] == getattr(original,'in_round'))):
                 is_one_increment(update['in_round'],
                                  getattr(original,'in_round'))
                 voting_round_complete(getattr(original, 'id'))
+
         serializer.save()
     # perform update
     # Allow no changes after has_winner set to true
@@ -122,7 +133,7 @@ class MovieInSelectionList(generics.ListCreateAPIView):
 
 class MovieInSelectionDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MovieInSelectionSerializer
-    permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (IsOwnerOfSelectionOrReadOnly,)
 
     def get_queryset(self):
         selection_id = self.kwargs['selection_id']
@@ -162,6 +173,7 @@ class VoteList(generics.ListCreateAPIView):
         selection_id = self.kwargs['selection_id']
         movie_in_selection = serializer.validated_data['movie_in_selection']
         selection = Selection.objects.get(id=selection_id)
+        movie_is_in_selection(selection, movie_in_selection)
         round_is_valid(selection, voting_round)
         votes = Vote.objects.filter(
             selection=selection,

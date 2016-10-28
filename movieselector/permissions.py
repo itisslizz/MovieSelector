@@ -60,3 +60,11 @@ class IsParticipantOrReadOnly(permissions.BasePermission):
 
         selection_id = view.kwargs['selection_id']
         return request.user in Selection.objects.get(id=selection_id).users.order_by('id')
+
+class IsOwnerOfSelectionOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        selection_id = view.kwargs['selection_id']
+        return request.user == Selection.objects.get(id=selection_id).owner
